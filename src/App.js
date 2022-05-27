@@ -1,3 +1,5 @@
+import Container from "react-bootstrap/Container";
+
 export default function App() {
   const posts = [
     {
@@ -19,7 +21,7 @@ export default function App() {
   ];
 
   return (
-    <>
+    <Container fluid className="App">
       <h1>Microblog</h1>
       {
         posts.length === 0 ?
@@ -35,6 +37,6 @@ export default function App() {
           );
         })
       }
-    </>
+    </Container>
   );
 }
