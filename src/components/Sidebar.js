@@ -6,7 +6,7 @@ export default function Sidebar() {
   return (
     <Navbar sticky="top" className="flex-column Sidebar">
       <Nav.Item>
-        <Nav.Link as={NavLink} to="/">
+        <Nav.Link as={NavLink} to="/" end>
           Feed
         </Nav.Link>
       </Nav.Item>
