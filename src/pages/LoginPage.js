@@ -3,6 +3,7 @@ import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Body from "../components/Body";
 import InputField from "../components/InputField";
+import { Link } from "react-router-dom";
 
 export default function LoginPage() {
   const [formErrors, setFormErrors] = useState({});
@@ -61,6 +62,10 @@ export default function LoginPage() {
           Login
         </Button>
       </Form>
+      <hr />
+      <p>
+        Don&apos;t have an account? <Link to="/register">Register here</Link>!
+      </p>
     </Body>
   );
 }
