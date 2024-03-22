@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import Spinner from "react-bootstrap/Spinner";
+import { useApi } from "../contexts/ApiProvider";
 import Post from "./Post";
-
-const BASE_API_URL = process.env.REACT_APP_BASE_API_URL;
 
 export default function Posts() {
   const [posts, setPosts] = useState();
+  const api = useApi();
 
   /*
   React requires that
@@ -20,18 +20,17 @@ export default function Posts() {
   */
   useEffect(() => {
     (async () => {
-      const response = await fetch(BASE_API_URL + "/api/feed");
+      const response = await api.get("/feed");
 
       if (response.ok) {
-        const results = await response.json();
-        setPosts(results.data);
+        setPosts(response.body.data);
       } else {
         // To make this component robust,
         // it is also necessary to handle the case of the request failing.
         setPosts(null);
       }
     })();
-  }, []);
+  }, [api]);
 
   return (
     <>
