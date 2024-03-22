@@ -5,6 +5,7 @@ import Button from "react-bootstrap/Button";
 import Body from "../components/Body";
 import InputField from "../components/InputField";
 import { useApi } from "../contexts/ApiProvider";
+import { useFlash } from "../contexts/FlashProvider";
 
 export default function RegistrationPage() {
   const [formErrors, setFormErrors] = useState({});
@@ -14,6 +15,7 @@ export default function RegistrationPage() {
   const password2FieldRef = useRef();
   const navigate = useNavigate();
   const api = useApi();
+  const flash = useFlash();
 
   useEffect(() => {
     usernameFieldRef.current.focus();
@@ -42,6 +44,7 @@ export default function RegistrationPage() {
         setFormErrors(response.body.errors.json);
       } else {
         setFormErrors({});
+        flash("You have successfully registered!", "success");
         navigate("/login");
       }
     }
