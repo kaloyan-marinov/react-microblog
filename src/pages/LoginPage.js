@@ -23,6 +23,20 @@ export default function LoginPage() {
     const username = usernameFieldRef.current.value;
     const password = passwordFieldRef.current.value;
 
+    const errors = {};
+    if (!username) {
+      errors.username = "Username must not be empty.";
+    }
+    if (!password) {
+      errors.password = "Password must not be empty.";
+    }
+
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      return;
+    }
+
+    // TODO: log the user in
     console.log(`You entered ${username}:${password}`);
   };
 
