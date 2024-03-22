@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Spinner from "react-bootstrap/Spinner";
+import Post from "./Post";
 
 const BASE_API_URL = process.env.REACT_APP_BASE_API_URL;
 
@@ -42,15 +43,9 @@ export default function Posts() {
             <p>Could not retrieve blog posts.</p>
           ) : (
             <>
-              {posts.map((post) => {
-                return (
-                  <p key={post.id}>
-                    <b>{post.author.username}</b> &mdash; {post.timestamp}
-                    <br />
-                    {post.text}
-                  </p>
-                );
-              })}
+              {posts.map((post) => (
+                <Post key={post.id} post={post} />
+              ))}
             </>
           )}
         </>
