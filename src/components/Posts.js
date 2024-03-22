@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import Spinner from "react-bootstrap/Spinner";
 import { useApi } from "../contexts/ApiProvider";
 import Post from "./Post";
+import More from "./More";
 
 export default function Posts({ content }) {
   const [posts, setPosts] = useState();
+  const [pagination, setPagination] = useState();
   const api = useApi();
 
   let url;
@@ -39,6 +41,7 @@ export default function Posts({ content }) {
 
       if (response.ok) {
         setPosts(response.body.data);
+        setPagination(response.body.pagination);
       } else {
         // To make this component robust,
         // it is also necessary to handle the case of the request failing.
@@ -46,6 +49,10 @@ export default function Posts({ content }) {
       }
     })();
   }, [api, url]);
+
+  const loadNextPage = async () => {
+    // TODO
+  };
 
   return (
     <>
@@ -60,6 +67,7 @@ export default function Posts({ content }) {
               {posts.map((post) => (
                 <Post key={post.id} post={post} />
               ))}
+              <More pagination={pagination} loadNextPage={loadNextPage} />
             </>
           )}
         </>
