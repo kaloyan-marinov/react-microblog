@@ -51,7 +51,14 @@ export default function Posts({ content }) {
   }, [api, url]);
 
   const loadNextPage = async () => {
-    // TODO
+    const response = await api.get(url, {
+      after: posts[posts.length - 1].timestamp,
+    });
+
+    if (response.ok) {
+      setPosts([...posts, ...response.body.data]);
+      setPagination(response.body.pagination);
+    }
   };
 
   return (
