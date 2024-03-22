@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Body from "../components/Body";
@@ -6,6 +6,12 @@ import InputField from "../components/InputField";
 
 export default function LoginPage() {
   const [formErrors, setFormErrors] = useState({});
+  const usernameFieldRef = useRef();
+  const passwordFieldRef = useRef();
+
+  useEffect(() => {
+    usernameFieldRef.current.focus();
+  }, []);
 
   const onSubmit = (ev) => {
     // Very Important:
@@ -14,7 +20,10 @@ export default function LoginPage() {
     // from sending a network request with the form data.
     ev.preventDefault();
 
-    console.log("handle form-submission here");
+    const username = usernameFieldRef.current.value;
+    const password = passwordFieldRef.current.value;
+
+    console.log(`You entered ${username}:${password}`);
   };
 
   return (
@@ -25,12 +34,14 @@ export default function LoginPage() {
           name="username"
           label="Username or email address"
           error={formErrors.username}
+          fieldRef={usernameFieldRef}
         />
         <InputField
           name="password"
           label="Password"
           type="password"
           error={formErrors.password}
+          fieldRef={passwordFieldRef}
         />
         <Button variant="primary" type="submit">
           Login
