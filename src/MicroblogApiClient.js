@@ -10,6 +10,13 @@ export default class MicroblogApiClient {
   }
 
   async request(options) {
+    /*
+    Assume that, if the [HTTP] client doesn't have an access token,
+    then a different `Authorization` header will be included
+    in the `options` object passed by the caller,
+    which overrides the `Authorization` header defined here.
+    */
+
     let query = new URLSearchParams(options.query || {}).toString();
     if (query !== "") {
       query = "?" + query;
@@ -21,10 +28,16 @@ export default class MicroblogApiClient {
         method: options.method,
         headers: {
           "Content-Type": "application/json",
+          Authorization: "Bearer " + localStorage.getItem("accessToken"),
           ...options.headers,
         },
         body: options.body ? JSON.stringify(options.body) : null,
       });
+
+      /*
+      TODO: (2024/03/25, 06:07)
+            implement (support for) the "refreshing" of an expired access token
+      */
     } catch (error) {
       response = {
         ok: false,
@@ -81,5 +94,118 @@ export default class MicroblogApiClient {
       url,
       ...options,
     });
+  }
+
+  async login(username, password) {
+    /*
+    Handle all _three_ possible cases,
+    which may arise as a consequence of issuing a POST request to "/api/tokens".
+
+    The two most obvious ones are
+    an authentication success (in which case this method returns "ok")
+    and
+    an failure (in which case this method returns "fail").
+    
+    A third less likely case is
+    when the authentication request fails not because of invalid credentials
+    but because of an unexpected issue (in which case this method returns "error").
+    */
+
+    const base64EncodingOfCredentials = btoa(username + ":" + password);
+    const response = await this.post("/tokens", null, {
+      headers: {
+        Authorization: "Basic " + base64EncodingOfCredentials,
+      },
+    });
+
+    if (!response.ok) {
+      return response.status === 401 ? "fail" : "error";
+    }
+
+    /*
+    Storing the token in local storage
+    makes it possible for the application to "remember" the authenticated user
+      when the user refreshes the browser page,
+      when the site is opened in multiple tabs,
+      and when the browser is closed and reopened,
+    which are behaviors that most users expect from a web application.
+    
+    However, you should keep in mind that
+    storing sensitive information in local storage presents a risk
+    if your application is vulnerable to cross-site scripting (XSS) attacks.
+
+    An XSS attack involves the attacker figuring out a way
+    to insert malicious JavaScript into an application running on the user's browser.
+    There are two basic ways in which this can happen:
+      
+      (1) The attacker
+          finds a way to break into the server
+          that hosts the application's JavaScript files
+          and
+          makes modifications to them
+          so that hacked versions with malicious code are served to clients.
+      
+      (2) The attacker tricks the application running in the browser
+          into rendering a `<script>` tag with malicious JavaScript code.
+
+      With regard to the attack vector in (1):
+      if you host your React application yourself,
+      then you must use standard server hardening techniques such as
+        passwordless logins,
+        use of a firewall,
+        closing any unnecessary network ports,
+        etc.
+      
+      With regard to the attack vector in (2):
+      React provides decent protection against that attack vector,
+      as long as you render all the content in your application through JSX.
+      Protection against XSS attacks in React
+      consists in applying escaping to all the text
+      that is included in JSX contents returned by components.
+      This escaping is always applied,
+      there is no need to enable this protection.
+
+      To keep your application well protected,
+      it is extremely important to avoid the temptation
+      to bypass JSX and render contents to the page directly through DOM APIs,
+      as this would not have any protection against XSS attacks.
+
+      When all these security concerns are addressed,
+      the risk of a React application being the victim of an XSS attack
+      is extremely low.
+
+      ---
+
+      Even though it would be unlikely for an access token to be compromised,
+      it is considered a good practice to use short expirations on these tokens,
+      so that if an attacker manages to steal a token by some unknown attack method,
+      the damage that can be done with it is limited.
+      
+      The access tokens issued by the backend API
+      can only be renewed
+      with a refresh token that is stored in a secure cookie,
+      inaccessible from the browser's JavaScript environment.
+    */
+    localStorage.setItem("accessToken", response.body.access_token);
+    return "ok";
+  }
+
+  async logout() {
+    /*
+    Log the user out (of both the backend application and the frontend application.)
+    */
+
+    // Issue an HTTP request to the backend API's token-revocation endpoint.
+    await this.delete("/tokens");
+
+    // Make the frontend application completely forget about the revoked token.
+    localStorage.removeItem("accessToken");
+  }
+
+  isAuthenticated() {
+    /*
+    Check if there is an authenticated user.
+    */
+    return localStorage.getItem("accessToken") !== null;
   }
 }
