@@ -1,20 +1,27 @@
 import { useState, useEffect, useRef } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Body from "../components/Body";
 import InputField from "../components/InputField";
-import { Link } from "react-router-dom";
+import { useUser } from "../contexts/UserProvider";
+import { useFlash } from "../contexts/FlashProvider";
 
 export default function LoginPage() {
   const [formErrors, setFormErrors] = useState({});
   const usernameFieldRef = useRef();
   const passwordFieldRef = useRef();
+  const { login } = useUser();
+  const flash = useFlash();
+  // The following is similar to the `<Navigate>` component, but in function form.
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     usernameFieldRef.current.focus();
   }, []);
 
-  const onSubmit = (ev) => {
+  const onSubmit = async (ev) => {
     // Very Important:
     // Disable the browser's own form-submission logic,
     // in order to prevent the browser
@@ -37,8 +44,29 @@ export default function LoginPage() {
       return;
     }
 
-    // TODO: log the user in
-    console.log(`You entered ${username}:${password}`);
+    // Perform the authentication procedure.
+    const result = await login(username, password);
+    if (result === "fail") {
+      // The authentication request failed because of invalid credentials.
+      flash("Invalid username or passsword", "danger");
+    } else if (result === "ok") {
+      // The user is successfully authenticated.
+      // (The API client now has an access token
+      // and the user context has the user details to share with other components,
+      // so the user can be redirected to any of the private routes of the application.)
+      let next = "/";
+      if (location.state && location.state.next) {
+        next = location.state.next;
+      }
+      navigate(next);
+    } else {
+      // In this case, `request === "error"`,
+      // i.e. the authentication request failed not because of invalid credentials
+      // but because of an unexpected issue.
+      console.log(
+        "TODO: this will be handled later with an application-wide error handler"
+      );
+    }
   };
 
   return (
