@@ -11,6 +11,41 @@ export default class MicroblogApiClient {
 
   async request(options) {
     /*
+    Support transparent token refreshes as follows:
+
+    - Send the request
+    - If the response is not 401
+    - Return response to caller
+    - Else
+    - Refresh access token
+    - Send original request again with new access token
+    - Return response to caller
+    */
+
+    let response = await this.requestInternal(options);
+
+    // If
+    // the original request came back with a 401 status code
+    // _and_
+    // the URL is not the one for the refresh token endpoint already
+    // (with the second check being useful in order to avoid a possible endless loop
+    // in case requests to the refresh-token endpoint also fail with a 401 status code):
+    if (response.status === 401 && options.url !== "/tokens") {
+      const refreshResponse = await this.put("/tokens", {
+        access_token: localStorage.getItem("accessToken"),
+      });
+
+      if (refreshResponse.ok) {
+        localStorage.setItem("accessToken", refreshResponse.body.access_token);
+        response = await this.requestInternal(options);
+      }
+    }
+
+    return response;
+  }
+
+  async requestInternal(options) {
+    /*
     Assume that, if the [HTTP] client doesn't have an access token,
     then a different `Authorization` header will be included
     in the `options` object passed by the caller,
@@ -31,13 +66,12 @@ export default class MicroblogApiClient {
           Authorization: "Bearer " + localStorage.getItem("accessToken"),
           ...options.headers,
         },
+        // The following causes the cookies,
+        // which the backend API set when the user first authenticated,
+        // to be sent.
+        credentials: options.url === "/tokens" ? "include" : "omit",
         body: options.body ? JSON.stringify(options.body) : null,
       });
-
-      /*
-      TODO: (2024/03/25, 06:07)
-            implement (support for) the "refreshing" of an expired access token
-      */
     } catch (error) {
       response = {
         ok: false,
