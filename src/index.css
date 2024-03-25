@@ -19,11 +19,11 @@
   width: 100%;
 }
 
-.Sidebar .nav-item .active {
+.Sidebar .nav-item .active, .dropdown-item.active {
   background-color: #def;
 }
 
-.Sidebar a {
+.Sidebar a, .dropdown-item, .dropdown-item.active {
   color: #444;
 }
 
