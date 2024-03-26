@@ -52,12 +52,50 @@ export default function UserPage() {
     navigate("/edit");
   };
 
-  const follow = () => {
-    // TODO
+  const follow = async () => {
+    const response = await api.post("/me/following/" + user.id);
+
+    if (response.ok) {
+      // The first argument in the following call
+      // is not a plain string but a JSX fragment;
+      // that makes it possible to use a bold font for the username.
+      // (Using a plain string with HTML elements
+      // such as "You are now following <b>{user.username}</b>." in this case,
+      // would not work,
+      // because, as a measure to prevent cross-site scripting (XSS) attacks,
+      // React escapes all text that is rendered.
+      flash(
+        <>
+          You are now following <b>{user.username}</b>.
+        </>,
+        "success"
+      );
+
+      setIsFollower(true);
+    }
   };
 
-  const unfollow = () => {
-    // TODO
+  const unfollow = async () => {
+    const response = await api.delete("/me/following/" + user.id);
+
+    if (response.ok) {
+      // The first argument in the following call
+      // is not a plain string but a JSX fragment;
+      // that makes it possible to use a bold font for the username.
+      // (Using a plain string with HTML elements
+      // such as "You have unfollowed <b>{user.username}</b>." in this case,
+      // would not work,
+      // because, as a measure to prevent cross-site scripting (XSS) attacks,
+      // React escapes all text that is rendered.
+      flash(
+        <>
+          You have unfollowed <b>{user.username}</b>.
+        </>,
+        "success"
+      );
+
+      setIsFollower(false);
+    }
   };
 
   return (
