@@ -11,6 +11,7 @@ import LoginPage from "./pages/LoginPage";
 import RegistrationPage from "./pages/RegistrationPage";
 import EditUserPage from "./pages/EditUserPage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
+import ResetRequestPage from "./pages/ResetRequestPage";
 import PrivateRoute from "./components/PrivateRoute";
 import PublicRoute from "./components/PublicRoute";
 
@@ -36,6 +37,14 @@ export default function App() {
                   element={
                     <PublicRoute>
                       <LoginPage />
+                    </PublicRoute>
+                  }
+                />
+                <Route
+                  path="/reset-request"
+                  element={
+                    <PublicRoute>
+                      <ResetRequestPage />
                     </PublicRoute>
                   }
                 />
