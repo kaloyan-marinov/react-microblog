@@ -5,7 +5,8 @@ export default class MicroblogApiClient {
   This encapsulates the logic for issuing HTTP requests to the backend (web) API.
   */
 
-  constructor() {
+  constructor(onError) {
+    this.onError = onError;
     this.base_url = BASE_API_URL + "/api";
   }
 
@@ -39,6 +40,12 @@ export default class MicroblogApiClient {
         localStorage.setItem("accessToken", refreshResponse.body.access_token);
         response = await this.requestInternal(options);
       }
+    }
+
+    // If the server that the web backend is running on is unresponsive or offline,
+    // call a/the custom error-handler function (passed by the caller).
+    if (response.status >= 500 && this.onError) {
+      this.onError(response);
     }
 
     return response;

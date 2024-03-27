@@ -1,5 +1,6 @@
 import { createContext, useContext } from "react";
 import MicroblogApiClient from "../MicroblogApiClient";
+import { useFlash } from "./FlashProvider";
 
 // At first thought, one may consider
 // incorporating the `MicroblogApiClient` class into the frontend application
@@ -22,7 +23,25 @@ import MicroblogApiClient from "../MicroblogApiClient";
 const ApiContext = createContext();
 
 export default function ApiProvider({ children }) {
-  const api = new MicroblogApiClient();
+  const flash = useFlash();
+
+  const onError = () => {
+    // The following statement causes React to re-render the `FlashProvider`,
+    // which will create a new `flash` function,
+    // which will in turn cause React to re-render the current component,
+    // creating a new `onError` and a new instance of the `MicroblogApiClient` class.
+    // That causes any component
+    //    which calls the `useApi` hook
+    //    and has a side effect function depending on the instance returned by the hook
+    // to be re-rendered by React;
+    // one such component is the `UserProvider`.
+    // All that risks entering an endless render loop/cycle,
+    // which _at first sight_ is launched
+    // due to cyclical/circular chain of dependencies (among components).
+    flash("An unexpected error has occurred. Please try again.", "danger");
+  };
+
+  const api = new MicroblogApiClient(onError);
 
   return <ApiContext.Provider value={api}>{children}</ApiContext.Provider>;
 }
