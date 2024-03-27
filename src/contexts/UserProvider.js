@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import { useApi } from "./ApiProvider";
 
 const UserContext = createContext();
@@ -39,24 +45,27 @@ export default function UserProvider({ children }) {
     })();
   }, [api]);
 
-  const login = async (username, password) => {
-    const result = await api.login(username, password);
+  const login = useCallback(
+    async (username, password) => {
+      const result = await api.login(username, password);
 
-    if (result === "ok") {
-      const response = await api.get("/me");
-      setUser(response.ok ? response.body : null);
-    }
+      if (result === "ok") {
+        const response = await api.get("/me");
+        setUser(response.ok ? response.body : null);
+      }
 
-    return result;
-  };
+      return result;
+    },
+    [api]
+  );
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     await api.logout();
 
     // Indicate to the rest of the frontend application that
     // there is no logged-in user.
     setUser(null);
-  };
+  }, [api]);
 
   return (
     <UserContext.Provider
