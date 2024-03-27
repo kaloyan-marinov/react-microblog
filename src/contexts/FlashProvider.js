@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useCallback } from "react";
 
 export const FlashContext = createContext();
 
@@ -16,29 +16,32 @@ export default function FlashProvider({ children }) {
   const [flashMessage, setFlashMessage] = useState({});
   const [visible, setVisible] = useState(false);
 
-  const hideFlash = () => {
+  const hideFlash = useCallback(() => {
     setVisible(false);
-  };
+  }, []);
 
-  const flash = (message, type, duration = 10) => {
-    if (flashTimer) {
-      // There is currently an alert on display.
-      // To replace it, cancel its associated timer
-      // (which would allow a new timer to be created for the new alert).
-      clearTimeout(flashTimer);
-      flashTimer = undefined;
-    }
+  const flash = useCallback(
+    (message, type, duration = 10) => {
+      if (flashTimer) {
+        // There is currently an alert on display.
+        // To replace it, cancel its associated timer
+        // (which would allow a new timer to be created for the new alert).
+        clearTimeout(flashTimer);
+        flashTimer = undefined;
+      }
 
-    // Create a new alert.
-    setFlashMessage({
-      message,
-      type,
-    });
-    setVisible(true);
-    if (duration) {
-      flashTimer = setTimeout(hideFlash, duration * 1000);
-    }
-  };
+      // Create a new alert.
+      setFlashMessage({
+        message,
+        type,
+      });
+      setVisible(true);
+      if (duration) {
+        flashTimer = setTimeout(hideFlash, duration * 1000);
+      }
+    },
+    [hideFlash]
+  );
 
   return (
     <FlashContext.Provider
