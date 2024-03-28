@@ -99,3 +99,46 @@ test("logs user in", async () => {
   expect(urls[0]).toMatch(/^http.*\/api\/tokens$/);
   expect(urls[1]).toMatch(/^http.*\/api\/me$/);
 });
+
+test("logs user in with bad credentials", async () => {
+  const urls = [];
+
+  global.fetch.mockImplementationOnce((url) => {
+    urls.push(url);
+
+    return {
+      status: 401,
+      ok: false,
+      json: () => Promise.resolve({}),
+    };
+  });
+
+  const Test = () => {
+    const [result, setResult] = useState();
+    const { login, user } = useUser();
+
+    useEffect(() => {
+      (async () => {
+        setResult(await login("username", "password"));
+      })();
+    }, []);
+    return <>{result}</>;
+  };
+
+  render(
+    <FlashProvider>
+      <ApiProvider>
+        <UserProvider>
+          <Test />
+        </UserProvider>
+      </ApiProvider>
+    </FlashProvider>
+  );
+
+  const element = await screen.findByText("fail");
+  expect(element).toBeInTheDocument();
+
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+  expect(urls).toHaveLength(1);
+  expect(urls[0]).toMatch(/^http.*\/api\/tokens$/);
+});
