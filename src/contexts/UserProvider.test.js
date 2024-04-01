@@ -142,3 +142,71 @@ test("logs user in with bad credentials", async () => {
   expect(urls).toHaveLength(1);
   expect(urls[0]).toMatch(/^http.*\/api\/tokens$/);
 });
+
+test("logs user out", async () => {
+  // Instead of repeating a login procedure as in previous tests,
+  // this test installs a fake access token in local storage,
+  // which will make the frontend application believe that
+  // it is being started within a browser which some user has already logged in on.
+  localStorage.setItem("accessToken", "MOCKED-123");
+
+  global.fetch
+    .mockImplementationOnce((url) => {
+      return {
+        status: 200,
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            username: "susan",
+          }),
+      };
+    })
+    .mockImplementationOnce((url) => {
+      return {
+        status: 204,
+        ok: true,
+        json: () => Promise.resolve({}),
+      };
+    });
+
+  const Test = () => {
+    const { user, logout } = useUser();
+
+    if (user) {
+      return (
+        <>
+          <p>{user.username}</p>
+          <button onClick={logout}>logout</button>
+        </>
+      );
+    } else if (user === null) {
+      return <p>logged out</p>;
+    } else {
+      return null;
+    }
+  };
+
+  render(
+    <FlashProvider>
+      <ApiProvider>
+        <UserProvider>
+          <Test />
+        </UserProvider>
+      </ApiProvider>
+    </FlashProvider>
+  );
+
+  const element = await screen.findByText("susan");
+  const button = await screen.findByRole("button");
+  expect(element).toBeInTheDocument();
+  expect(button).toBeInTheDocument();
+
+  // Simulate a user clicking the button for logging out,
+  // by utizing the `user-event`,
+  // which is included in the React Testing Library
+  // and is a companion library that is specialized in generating fake events.
+  userEvent.click(button);
+  const element2 = await screen.findByText("logged out");
+  expect(element2).toBeInTheDocument();
+  expect(localStorage.getItem("accessToken")).toBeNull();
+});
