@@ -1,0 +1,31 @@
+version: '3'
+
+services:
+
+  # Arbitrary name given to the container;
+  # Docker Compose sets this name as a hostname in the corresponding container.
+  frontend:
+    build: .
+    image: react-microblog
+    ports:
+      - "8080:80"
+    restart: always
+
+  # Arbitrary name given to the container;
+  # Docker Compose sets this name as a hostname in the corresponding container.
+  api:
+    build: ../microblog-api
+    image: microblog-api
+    # Create a mount for the data volume, which is declared below.
+    volumes:
+      - type: volume
+        source: data
+        target: /data
+    env_file: .env.api
+    environment:
+      DATABASE_URL: sqlite:////data/db.sqlite
+    restart: always
+
+# Create a volume, where the database file will be stored.
+volumes:
+  data:
